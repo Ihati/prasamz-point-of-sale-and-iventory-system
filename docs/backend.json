@@ -1,0 +1,252 @@
+
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Streamline POS system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "description": "The user's email address.",
+          "format": "email"
+        },
+        "role": {
+          "type": "string",
+          "description": "The user's role within the system (e.g., 'admin', 'staff')."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time the user account was created.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email",
+        "role",
+        "createdAt"
+      ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product in the Streamline POS inventory.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Product entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the product."
+        },
+        "category": {
+          "type": "string",
+          "description": "The category the product belongs to."
+        },
+        "costPrice": {
+            "type": "number",
+            "description": "The cost at which the business acquired the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product."
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The current quantity of the product in stock."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time the product was added to the inventory.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "category",
+        "costPrice",
+        "price",
+        "quantity",
+        "createdAt"
+      ]
+    },
+    "Sale": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Sale",
+      "type": "object",
+      "description": "Represents a sale transaction in the Streamline POS system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Sale entity."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who processed the sale. (Relationship: User 1:N Sale)"
+        },
+        "customerName": {
+          "type": "string",
+          "description": "The name of the customer for the sale."
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "The date and time the sale was recorded.",
+          "format": "date-time"
+        },
+        "items": {
+          "type": "array",
+          "description": "The list of items included in the sale.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productId": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              },
+              "price": {
+                "type": "number"
+              },
+              "priceType": {
+                "type": "string",
+                "enum": [
+                  "retail",
+                  "wholesale"
+                ]
+              }
+            },
+            "required": [
+              "productId",
+              "name",
+              "quantity",
+              "price",
+              "priceType"
+            ]
+          }
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "customerName",
+        "createdAt",
+        "items"
+      ]
+    },
+    "SaleItem": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SaleItem",
+      "type": "object",
+      "description": "Represents an individual item included in a sale transaction.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SaleItem entity."
+        },
+        "saleId": {
+          "type": "string",
+          "description": "Reference to the Sale this item belongs to. (Relationship: Sale 1:N SaleItem)"
+        },
+        "productId": {
+          "type": "string",
+          "description": "Reference to the Product being sold. (Relationship: Product 1:N SaleItem)"
+        },
+        "quantity": {
+          "type": "number",
+          "description": "The quantity of the product sold in this sale item."
+        },
+        "price": {
+          "type": "number",
+          "description": "The price of the product at the time of the sale."
+        }
+      },
+      "required": [
+        "id",
+        "saleId",
+        "productId",
+        "quantity",
+        "price"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "rules": "rules_version = '2';\n\nservice cloud.firestore {\n  match /databases/{database}/documents {\n\n    // Default catch-all to allow all authenticated users read/write access.\n    // This is suitable for development but should be refined for production.\n    match /{document=**} {\n      allow read, write: if request.auth != null;\n    }\n  }\n}\n",
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user data. This structure enables path-based ownership for user-specific data.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores product information. A flat collection is used due to the lack of hierarchical ownership requirements.",
+          "params": [
+            {
+              "name": "productId",
+              "description": "The unique identifier for the product."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/sales/{saleId}",
+        "definition": {
+          "entityName": "Sale",
+          "schema": {
+            "$ref": "#/backend/entities/Sale"
+          },
+          "description": "Stores sale transaction data in a root-level collection for easy querying. The 'userId' is denormalized within the document to link the sale to the user who created it.",
+          "params": [
+            {
+              "name": "saleId",
+              "description": "The unique identifier for the sale transaction."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed for simplicity and scalability. Storing 'users' and 'products' in root-level collections is standard. Sales have been moved to a root-level '/sales' collection instead of a subcollection under users. This significantly simplifies queries for fetching all sales, removing the need for collection group queries and complex composite indexes, which was a major pain point. The user ID is denormalized within each sale document to maintain the relationship to the user who created it. This structure is much more aligned with how products are handled and provides a more reliable and maintainable data architecture."
+  }
+}
+
+    
