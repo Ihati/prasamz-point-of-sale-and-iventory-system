@@ -282,8 +282,7 @@ export function Cart() {
       
       setTimeout(() => {
         try {
-          printWindow.print();git push -u origin main
-
+          printWindow.print();
         } finally {
           printWindow.close();
         }
@@ -394,3 +393,5 @@ type CartItem = Product & {
   price: number;
   cartItemId: string; // A unique ID for the item in the cart (e.g., product.id + '-' + priceType)
 };
+
+    
