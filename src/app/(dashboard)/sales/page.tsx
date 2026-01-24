@@ -60,7 +60,7 @@ const SaleRow = ({ sale, user, onDelete }: { sale: Sale, user: any, onDelete: (s
     return (
         <>
             <TableRow className="hover:bg-muted/50">
-                <TableCell className="font-mono text-xs cursor-pointer" onClick={() => setIsOpen(!isOpen)}>{sale.id}</TableCell>
+                <TableCell className="font-mono text-xs cursor-pointer" onClick={() => setIsOpen(!isOpen)}>{sale.receiptNumber}</TableCell>
                 <TableCell className="cursor-pointer" onClick={() => setIsOpen(!isOpen)}>{sale.customerName}</TableCell>
                 <TableCell className="text-right cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
                     Shs {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -144,13 +144,13 @@ export default function SalesHistoryPage() {
       return;
     }
     
-    const headers = ['Sale ID', 'Customer', 'Product Name', 'Price Type', 'Quantity', 'Unit Price', 'Item Total', 'Sale Date'];
+    const headers = ['Receipt Number', 'Customer', 'Product Name', 'Price Type', 'Quantity', 'Unit Price', 'Item Total', 'Sale Date'];
     const csvRows: string[] = [headers.join(',')];
 
     sales.forEach(sale => {
       sale.items.forEach(item => {
         const row = [
-          sale.id,
+          sale.receiptNumber,
           `"${sale.customerName}"`,
           `"${item.name}"`,
           item.priceType,
@@ -190,7 +190,7 @@ export default function SalesHistoryPage() {
       await deleteSale(saleToDelete.id);
       toast({
         title: 'Sale Deleted',
-        description: `Sale record ${saleToDelete.id} has been removed.`,
+        description: `Sale record with receipt number ${saleToDelete.receiptNumber} has been removed.`,
       });
       setSaleToDelete(null);
     }
@@ -247,7 +247,7 @@ export default function SalesHistoryPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Sale ID</TableHead>
+              <TableHead>Receipt No.</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead className="text-right hidden sm:table-cell">Date</TableHead>
@@ -272,7 +272,7 @@ export default function SalesHistoryPage() {
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
           <AlertDialogDescription>
             This action cannot be undone. This will permanently delete the sale record
-            with ID &quot;{saleToDelete?.id}&quot; and remove its data from our servers.
+            with receipt number &quot;{saleToDelete?.receiptNumber}&quot; and remove its data from our servers.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

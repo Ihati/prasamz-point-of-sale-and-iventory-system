@@ -14,7 +14,7 @@ import {
   type User as FirebaseUser,
   getIdTokenResult
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, collection, addDoc, getDocs } from 'firebase/firestore';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { useToast } from './use-toast';
@@ -25,7 +25,7 @@ type UserContextType = {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  addSale: (newSale: Omit<Sale, 'id' | 'createdAt' | 'userId'>) => Promise<string | undefined>;
+  addSale: (newSale: Omit<Sale, 'id' | 'createdAt' | 'userId' | 'receiptNumber'>) => Promise<{ id: string; receiptNumber: string; } | undefined>;
   sendPasswordReset: (email: string) => Promise<boolean>;
   isAdmin: boolean;
 };
@@ -158,8 +158,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
 
     const addSale = React.useCallback(
     async (
-      newSaleData: Omit<Sale, 'id' | 'createdAt' | 'userId'>
-    ): Promise<string | undefined> => {
+      newSaleData: Omit<Sale, 'id' | 'createdAt' | 'userId' | 'receiptNumber'>
+    ): Promise<{ id: string; receiptNumber: string; } | undefined> => {
       if (!db || !user) {
         toast({
           title: 'Not logged in',
@@ -168,17 +168,22 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
         });
         return undefined;
       }
-
-      const saleWithTimestamp = {
-        customerName: newSaleData.customerName,
-        userId: user.id,
-        createdAt: serverTimestamp(),
-        items: newSaleData.items,
-      };
-
+      
       const salesCollectionRef = collection(db, 'sales');
 
       try {
+        const querySnapshot = await getDocs(salesCollectionRef);
+        const salesCount = querySnapshot.size;
+        const receiptNumber = (salesCount + 1).toString().padStart(3, '0');
+
+        const saleWithTimestamp = {
+          customerName: newSaleData.customerName,
+          userId: user.id,
+          createdAt: serverTimestamp(),
+          items: newSaleData.items,
+          receiptNumber: receiptNumber,
+        };
+
         const docRef = await addDoc(salesCollectionRef, saleWithTimestamp)
           .catch(
             async (error) => {
@@ -193,7 +198,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
               throw error;
             }
           );
-        return docRef.id;
+        return { id: docRef.id, receiptNumber };
       } catch (error: any) {
         if (error.name !== 'FirestorePermissionError') {
           toast({

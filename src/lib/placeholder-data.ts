@@ -1,3 +1,4 @@
+
 export type Product = {
   id: string;
   name: string;
@@ -21,6 +22,7 @@ export type SaleItem = {
 
 export type Sale = {
   id:string;
+  receiptNumber: string;
   userId: string;
   customerName: string;
   createdAt: any; // Can be ISO string, Date, or Firestore Timestamp
@@ -74,6 +76,7 @@ function generateSales(products: Product[], users: User[]): Sale[] {
 
     sales.push({
       id: `sale-${i + 1}`,
+      receiptNumber: (i + 1).toString().padStart(3, '0'),
       userId: user.id,
       customerName: customerName,
       createdAt: saleDate.toISOString(),

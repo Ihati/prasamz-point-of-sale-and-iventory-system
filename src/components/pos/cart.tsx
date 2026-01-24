@@ -50,6 +50,10 @@ const ReceiptPreview = React.forwardRef<HTMLDivElement, { sale: Sale, user: User
       </div>
       <hr className="border-dashed border-black mb-2" />
       <div className="flex justify-between text-xs">
+        <span>Receipt No:</span>
+        <span>{sale.receiptNumber}</span>
+      </div>
+      <div className="flex justify-between text-xs">
         <span>Date:</span>
         <span>{formattedDate}</span>
       </div>
@@ -192,13 +196,15 @@ export function Cart() {
         priceType: i.priceType
       }));
 
-      const newSaleId = await addSale({ customerName: customerName || 'N/A', items: saleItemsForDb });
+      const saleInfo = await addSale({ customerName: customerName || 'N/A', items: saleItemsForDb });
 
-      if (newSaleId) {
+      if (saleInfo) {
+        const { id: newSaleId, receiptNumber } = saleInfo;
         await Promise.all(items.map(item => updateProductQuantity(item.id, -item.cartQuantity)));
 
         const saleDataForReceipt: Sale = {
           id: newSaleId,
+          receiptNumber: receiptNumber,
           customerName: customerName || 'N/A',
           items: saleItemsForDb,
           createdAt: new Date(),
@@ -393,6 +399,3 @@ type CartItem = Product & {
   price: number;
   cartItemId: string; // A unique ID for the item in the cart (e.g., product.id + '-' + priceType)
 };
-
-    
-    
