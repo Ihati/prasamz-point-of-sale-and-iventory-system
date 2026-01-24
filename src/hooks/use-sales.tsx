@@ -12,8 +12,6 @@ import {
   orderBy,
   doc,
   deleteDoc,
-  getDocs,
-  writeBatch,
 } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -22,7 +20,6 @@ type SalesContextType = {
   sales: Sale[];
   loading: boolean;
   deleteSale: (saleId: string) => Promise<void>;
-  backfillReceiptNumbers: () => Promise<void>;
 };
 
 const SalesContext = React.createContext<SalesContextType | null>(null);
@@ -92,55 +89,13 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     [db, toast]
   );
 
-  const backfillReceiptNumbers = React.useCallback(async () => {
-    if (!db) {
-      toast({ title: 'Database not connected', variant: 'destructive' });
-      return;
-    }
-    
-    toast({ title: 'Starting renumbering...', description: 'Assigning consistent receipt numbers to all sales.' });
-
-    const salesCollection = collection(db, 'sales');
-    const q = query(salesCollection, orderBy('createdAt', 'asc'));
-
-    try {
-        const querySnapshot = await getDocs(q);
-        const batch = writeBatch(db);
-        
-        querySnapshot.docs.forEach((document, index) => {
-            const receiptNumber = (index + 1).toString().padStart(3, '0');
-            batch.update(document.ref, { receiptNumber: receiptNumber });
-        });
-
-        await batch.commit().catch(async (error) => {
-            if (error.code === 'permission-denied') {
-                const permissionError = new FirestorePermissionError({
-                    path: '/sales',
-                    operation: 'update',
-                    requestResourceData: { note: `Bulk update of ${querySnapshot.size} items.` }
-                });
-                errorEmitter.emit('permission-error', permissionError);
-            }
-            throw error;
-        });
-
-        toast({ title: 'Renumbering Complete', description: `${querySnapshot.size} sales have been updated.` });
-    } catch (error: any) {
-        if (error.name !== 'FirestorePermissionError') {
-            toast({ title: 'Renumbering Failed', description: 'Could not update past sales records.', variant: 'destructive' });
-        }
-    }
-  }, [db, toast]);
-
-
   const value = React.useMemo(
     () => ({
       sales,
       loading,
       deleteSale,
-      backfillReceiptNumbers,
     }),
-    [sales, loading, deleteSale, backfillReceiptNumbers]
+    [sales, loading, deleteSale]
   );
 
   return (
