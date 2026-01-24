@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { File, Loader2, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { File, Loader2, ChevronDown, ChevronRight, Trash2, RefreshCw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -128,10 +128,11 @@ const SaleRow = ({ sale, user, onDelete }: { sale: Sale, user: any, onDelete: (s
 
 
 export default function SalesHistoryPage() {
-  const { sales, loading, deleteSale } = useSales();
+  const { sales, loading, deleteSale, backfillReceiptNumbers } = useSales();
   const { user } = useUser();
   const { toast } = useToast();
   const [saleToDelete, setSaleToDelete] = React.useState<Sale | null>(null);
+  const [isBackfilling, setIsBackfilling] = React.useState(false);
 
 
   const handleExport = () => {
@@ -196,6 +197,12 @@ export default function SalesHistoryPage() {
     }
   };
 
+  const handleBackfill = async () => {
+    setIsBackfilling(true);
+    await backfillReceiptNumbers();
+    setIsBackfilling(false);
+  };
+
 
   const renderContent = () => {
     if (loading) {
@@ -237,6 +244,12 @@ export default function SalesHistoryPage() {
           </CardDescription>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {user?.role === 'admin' && (
+              <Button size="sm" variant="outline" onClick={handleBackfill} disabled={isBackfilling || loading}>
+                  {isBackfilling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                  Renumber All
+              </Button>
+          )}
           <Button size="sm" variant="outline" onClick={handleExport} disabled={sales.length === 0 || loading}>
             <File className="mr-2 h-4 w-4" />
             Export Detailed
