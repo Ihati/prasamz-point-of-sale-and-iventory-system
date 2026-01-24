@@ -46,7 +46,7 @@ const ReceiptPreview = React.forwardRef<HTMLDivElement, { sale: Sale, user: User
         <h2 className="text-lg font-bold uppercase">Prasamz Spares</h2>
         <p className="text-xs font-bold">Motorbike and bicycle accessories</p>
         <p className="text-xs">K7 Building, Nyamakima, 1st Floor, Shop 57</p>
-        <p className="text-xs font-bold">Call: 0713-702-111 / 0721-268-951</p>
+        <p className="text-xs font-bold">Call: 0713-702-111</p>
       </div>
       <hr className="border-dashed border-black mb-2" />
       <div className="flex justify-between text-xs">
