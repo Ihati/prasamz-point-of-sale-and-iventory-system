@@ -15,6 +15,7 @@ import {
 } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { errorEmitter } from '@/firebase/error-emitter';
+import { useUser } from './use-user';
 
 type SalesContextType = {
   sales: Sale[];
@@ -29,8 +30,20 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
   const { db } = initializeFirebase();
+  const { user, loading: userLoading } = useUser();
 
   React.useEffect(() => {
+    if (userLoading) {
+      setLoading(true);
+      return;
+    }
+
+    if (!user) {
+      setSales([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     const q = query(collection(db, 'sales'), orderBy('createdAt', 'desc'));
 
@@ -64,7 +77,7 @@ export function SalesProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => unsubscribe();
-  }, [toast, db]);
+  }, [toast, db, user, userLoading]);
 
   const deleteSale = React.useCallback(
     async (saleId: string) => {
